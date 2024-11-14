@@ -18,7 +18,7 @@ local function SendPlayerPosition()
 
     if x and y then
         local message = string.format("%s|%f|%f|%d|%d|%s", name, x, y, mapID, level, class)
-        C_ChatInfo.SendAddonMessage("Astralith_Map", message, "PARTY")
+        C_ChatInfo.SendAddonMessage("Astralith_Map", message, "GUILD")
         print(string.format("Envoi position : %s - X: %f, Y: %f, MapID: %d", name, x, y, mapID))
     end
 end
