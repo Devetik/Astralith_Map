@@ -7,11 +7,14 @@ local guildMembers = {}
 -- Fonction pour envoyer la position du joueur
 local function SendPlayerPosition()
     local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then return end
+
     local position = C_Map.GetPlayerMapPosition(mapID, "player")
     local x, y = 0, 0
     if position then
         x, y = position:GetXY()
     end
+
     local name = UnitName("player")
     local level = UnitLevel("player")
     local class = select(2, UnitClass("player"))
@@ -19,14 +22,12 @@ local function SendPlayerPosition()
     if x and y then
         local message = string.format("%s|%f|%f|%d|%d|%s", name, x, y, mapID, level, class)
         C_ChatInfo.SendAddonMessage("Astralith_Map", message, "GUILD")
-        print(string.format("Envoi position : %s - X: %f, Y: %f, MapID: %d", name, x, y, mapID))
     end
 end
 
 -- Fonction pour recevoir les positions
 local function ReceivePlayerPosition(prefix, message, channel, sender)
     if prefix == "Astralith_Map" then
-
         -- Traitement des données reçues
         local name, x, y, mapID, level, class = strsplit("|", message)
         guildMembers[name] = {
@@ -36,8 +37,7 @@ local function ReceivePlayerPosition(prefix, message, channel, sender)
             level = tonumber(level),
             class = class
         }
-        if name == UnitName("player") then return end
-        print(string.format("Position reçue de %s : X=%f, Y=%f, MapID=%d", name, tonumber(x), tonumber(y), tonumber(mapID)))
+        print(name, " -> ", mapID, "   open(",WorldMapFrame:GetMapID(), ")")
     end
 end
 
@@ -63,38 +63,38 @@ C_Timer.NewTicker(5, SendPlayerPosition)
 local pins = {}
 
 local function UpdateMapPins()
-    print("Taille de la carte :", WorldMapFrame.ScrollContainer.Child:GetSize())
     -- Nettoie les anciens pins
     for _, pin in pairs(pins) do
         pin:Hide()
     end
 
+    -- Taille de la carte visible
+    local frameWidth, frameHeight = WorldMapFrame.ScrollContainer.Child:GetSize()
+
+    -- ID de la carte actuellement affichée
+    local currentMapID = WorldMapFrame:GetMapID()
+
     -- Ajoute les nouveaux pins
     for name, data in pairs(guildMembers) do
-        -- Vérifie que le joueur est dans la même zone
-        if data.mapID == C_Map.GetBestMapForUnit("player") then
-            local uiMapID = C_Map.GetBestMapForUnit("player")
-            local position = C_Map.GetPlayerMapPosition(uiMapID, "player")
-            if position then
-                local pin = pins[name]
-                if not pin then
-                    pin = CreateFrame("Frame", nil, WorldMapFrame.ScrollContainer.Child)
-                    pin:SetSize(16, 16)
-                    pin.icon = pin:CreateTexture(nil, "OVERLAY")
-                    pin.icon:SetAllPoints()
-                    pin.icon:SetTexture("Interface\\Minimap\\POIIcons") -- Icône standard
-                    pins[name] = pin
-                end
+        if data.mapID == currentMapID then
+            local pin = pins[name]
+            print("localication de ", name, " -> ", data.x, " ", data.y, " MapID:", data.mapID, " open(",currentMapID, ")")
 
-                -- Convertit les coordonnées pour la carte
-                local normalizedX, normalizedY = data.x / 100, data.y / 100
-                local frameWidth, frameHeight = WorldMapFrame.ScrollContainer.Child:GetSize()
+            local normalizedX = data.x * frameWidth
+            local normalizedY = data.y * frameHeight
 
-                -- Positionne le pin
-                pin:SetPoint("CENTER", WorldMapFrame.ScrollContainer.Child, "TOPLEFT", normalizedX * frameWidth, -normalizedY * frameHeight)
-                pin:Show()
-                print(string.format("Ajout du pin pour %s : X=%f, Y=%f", name, normalizedX, normalizedY))
+            if not pin then
+                pin = CreateFrame("Frame", nil, WorldMapFrame.ScrollContainer.Child)
+                pin:SetSize(16, 16)
+                pin.icon = pin:CreateTexture(nil, "OVERLAY")
+                pin.icon:SetAllPoints()
+                pin.icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_1")
+                pins[name] = pin
             end
+
+            -- Positionne le pin
+            pin:SetPoint("CENTER", WorldMapFrame.ScrollContainer.Child, "TOPLEFT", normalizedX, -normalizedY)
+            pin:Show()
         end
     end
 end
