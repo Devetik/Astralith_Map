@@ -1,0 +1,6 @@
+## Interface: 30400
+## Title: Astralith_Map
+## Author: [Helvete]
+## Version: 1.0
+## Notes: Affiche les membres de la guilde connectés
+Astralith_Map.lua
