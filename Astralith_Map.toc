@@ -3,4 +3,5 @@
 ## Author: [Helvete]
 ## Version: 1.0
 ## Notes: Affiche les membres de la guilde connectés
+## RequiredDeps: TomTom
 Astralith_Map.lua
